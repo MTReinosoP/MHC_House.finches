@@ -1,0 +1,172 @@
+---
+title: "Compare FASTA files by nucleotide sequence"
+author: "MT Reinoso, Jacob Roved"
+date: "05/20/2023"
+output: html_document
+---
+
+This script blasts the sequences from the Run1_Seqs fasta file against the Run2_Seqs fasta file, and creates a table that lists Acar matches and new sequence names and a fasta file using Acar-names and new sequence names.
+
+##Load the fasta files
+
+```{r}
+seqs_Run1 <- readLines("/Users/mariterereinosoperez/Desktop/Desktop - Maritere’s MacBook Pro/MHC_analisis/R1_R2_comparison/RUN1_NEW_Sequences_20250507.fas")
+
+seqs_Run2 <- readLines("/Users/mariterereinosoperez/Desktop/Desktop - Maritere’s MacBook Pro/MHC_analisis/R1_R2_comparison/RUN2_NEW_Sequences_20250507.fas")
+```
+
+# Create an output path
+
+```{r}
+path_out <- "/Users/mariterereinosoperez/Desktop/Desktop - Maritere’s MacBook Pro/MHC_analisis/R1_R2_comparison"
+```
+
+##Blasting the sequences from the Run2 data set against the sequences from the Run1 data set
+
+Compare sequences from the Run2 fasta file to all the sequences in the Run1 fasta file using a for loop and create a table with Acar names of matching sequences and new names identifying the rest as new MiSeq sequeces
+
+```{r}
+# Extract sequences from the fasta files
+seqs1 <- seqs_Run1[seq(2,length(seqs_Run1),2)]
+seqs2 <- seqs_Run2[seq(2,length(seqs_Run2),2)]
+
+# Extract sequence names from the fasta files, using gsub to remove ">" and adding _R1 or _R2 to the names
+names_Run1 <- paste0(gsub(">","",seqs_Run1[seq(1,length(seqs_Run1)-1,2)]), "_R1")
+names_Run2 <- paste0(gsub(">","",seqs_Run2[seq(1,length(seqs_Run2)-1,2)]), "_R2")
+
+# Create a vector that will contain match information
+match <- vector("character", length = length(seqs2))
+
+for (i in 1:length(seqs2)) {
+
+	if (seqs2[i] %in% seqs1) {
+
+	  match[i] <- names_Run1[which(seqs1 == seqs2[i])]
+
+	} else {
+
+	  match[i] <- c("no_match")
+
+	}
+
+}
+
+match_tab <- as.data.frame(match, row.names=names_Run2)
+
+# Check
+match_tab
+```
+
+```{r}
+# Create new vectors where the names of matching sequences get combined names from both fasta files, and non-matching sequences keep their original names 
+names_new_R1 <- vector("character", length = length(seqs1))
+names_new_R2 <- vector("character", length = length(seqs2))
+
+for (i in 1:length(seqs1)) {
+
+	if (seqs1[i] %in% seqs2) {
+
+	  names_new_R1[i] <- paste0(names_Run1[i], "_", names_Run2[which(seqs2 == seqs1[i])])
+
+	} else {
+
+	  names_new_R1[i] <- names_Run1[i]
+
+	}
+
+}
+
+for (i in 1:length(seqs2)) {
+
+	if (seqs2[i] %in% seqs1) {
+
+	  names_new_R2[i] <- paste0(names_Run1[which(seqs1 == seqs2[i])], "_", names_Run2[i])
+
+	} else {
+
+	  names_new_R2[i] <- names_Run2[i]
+
+	}
+
+}
+
+# Create tables listing the original and new names of the sequences
+names_tab_Run1 <- cbind(names_Run1, names_new_R1)
+names_tab_Run2 <- cbind(names_Run2, names_new_R2)
+
+# Check
+names_tab_Run1
+names_tab_Run2
+```
+
+```{r}
+# Export these tables as .csv
+write.csv(names_tab_Run1, file = paste0(path_out, "/Run1_new_seqnames_", c(format(Sys.Date(),"%Y%m%d")), ".csv"))
+write.csv(names_tab_Run2, file = paste0(path_out, "/Run2_new_seqnames_", c(format(Sys.Date(),"%Y%m%d")), ".csv"))
+```
+
+***  
+
+##Create a fasta file with the new sequence names for run 1
+
+```{r}
+# Create empty file
+file.create(paste0(path_out, "/Seqs_Run1_newnames_", c(format(Sys.Date(),"%Y%m%d")), ".fas"))
+  
+# for loop over all the sequences in the data set
+
+for (i in 1:length(seqs1)) {
+  
+  # Create sequence name line
+  seq_name <- paste0(">", names_new_R1[i])
+
+  # Get the nucleotide sequence
+  seq <- seqs1[i]
+  
+  # Concatenate sequence name and nucleotide sequence in two lines
+  lines <- paste(seq_name, seq, sep="\n")
+    
+  # Append sequence name line and nucleotide sequence to the file followed by a line break
+  cat(paste0(lines, "\n"), append = T, file = paste0(path_out, "/Seqs_Run1_newnames_", c(format(Sys.Date(),"%Y%m%d")), ".fas"))
+  
+}
+```
+
+##Create a fasta file with the new sequence names for run 2
+
+```{r}
+# Create empty file
+file.create(paste0(path_out, "/Seqs_Run2_newnames_", c(format(Sys.Date(),"%Y%m%d")), ".fas"))
+  
+# for loop over all the sequences in the data set
+  
+for (i in 1:length(seqs2)) {
+  
+  # Create sequence name line
+  seq_name <- paste0(">", names_new_R2[i])
+
+  # Get the nucleotide sequence
+  seq <- seqs2[i]
+  
+  # Concatenate sequence name and nucleotide sequence in two lines
+  lines <- paste(seq_name, seq, sep="\n")
+    
+  # Append sequence name line and nucleotide sequence to the file followed by a line break
+  cat(paste0(lines, "\n"), append = T, file = paste0(path_out, "/Seqs_Run2_newnames_", c(format(Sys.Date(),"%Y%m%d")), ".fas"))
+  
+}
+```
+
+Check the new FASTA files
+
+```{r}
+writeLines(readLines(paste0(path_out, "/Seqs_Run1_newnames_", c(format(Sys.Date(),"%Y%m%d")), ".fas")))
+```
+
+```{r}
+writeLines(readLines(paste0(path_out, "/Seqs_Run2_newnames_", c(format(Sys.Date(),"%Y%m%d")), ".fas")))
+```
+
+***  
+
+*Copyright Jacob Roved*  

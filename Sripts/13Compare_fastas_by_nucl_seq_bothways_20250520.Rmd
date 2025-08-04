@@ -7,6 +7,7 @@ output: html_document
 
 This script blasts the sequences from the Run1_Seqs fasta file against the Run2_Seqs fasta file, and creates a table that lists Acar matches and new sequence names and a fasta file using Acar-names and new sequence names.
 
+#Setting working directory
 setwd("/xdisk/mcnew/popgenworkshop/testmt")
 
 ##Load the fasta files

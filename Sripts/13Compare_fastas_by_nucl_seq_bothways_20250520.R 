@@ -18,7 +18,7 @@ seqs_Run2 <- readLines("Data/RUN2_NEW_Sequences_20250507.fas")
 #
 # # Create an output path
 #
-path_out <- "/Users/mariterereinosoperez/Desktop/Desktop - Maritere’s MacBook Pro/MHC_analisis/R1_R2_comparison"
+path_out <- "/xdisk/mcnew/popgenworkshop/testmt/results"
 #
 # ##Blasting the sequences from the Run2 data set against the sequences from the Run1 data set
 #

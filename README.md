@@ -1,4 +1,4 @@
-# MHC_House.finches
+# MHC_hf
 MHC gene analysis in house finches (*Haemorhous mexicanus*) and their association with *Mycoplasma gallisepticum* across U.S. and Mexico.
 
 ## Overview
